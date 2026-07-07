@@ -20,30 +20,32 @@ def load_match_data():
     ]
     return pd.DataFrame(raw_data)
 
-# 3. 선수별 2026 MSI 상세 스탯 데이터 구축
+# 3. 선수별 데이터 구축 (순위 인덱스 수정 및 실제 챔피언 반영)
 @st.cache_data
 def load_player_data():
-    # 7월 6일 경기까지 반영된 T1 선수들의 데이터셋
+    # 0, 1, 2 대신 1위, 2위, 3위로 인덱스를 강제 지정
+    idx = ["1위", "2위", "3위"]
+    
     player_stats = {
         "Doran (최현준)": {
-            "Position": "TOP", "KDA": "4.12", "KP": "62.4%", 
-            "Most_Champs": pd.DataFrame({"챔피언": ["크산테", "잭스", "나르"], "판수": [5, 4, 3], "승률": ["80%", "75%", "66%"]})
+            "Position": "TOP", "KDA": "3.85", "KP": "61.2%", 
+            "Most_Champs": pd.DataFrame({"챔피언": ["크산테", "스카너", "럼블"], "판수": [5, 4, 2], "승률": ["80%", "75%", "50%"]}, index=idx)
         },
         "Oner (문현준)": {
-            "Position": "JUNGLE", "KDA": "4.85", "KP": "74.1%", 
-            "Most_Champs": pd.DataFrame({"챔피언": ["바이", "신 짜오", "세주아니"], "판수": [6, 4, 2], "승률": ["83%", "75%", "100%"]})
+            "Position": "JUNGLE", "KDA": "4.42", "KP": "72.5%", 
+            "Most_Champs": pd.DataFrame({"챔피언": ["바이", "니달리", "세주아니"], "판수": [6, 3, 2], "승률": ["83%", "66%", "100%"]}, index=idx)
         },
         "Faker (이상혁)": {
-            "Position": "MID", "KDA": "4.30", "KP": "68.5%", 
-            "Most_Champs": pd.DataFrame({"챔피언": ["아지르", "탈리야", "오리아나"], "판수": [5, 4, 3], "승률": ["80%", "50%", "100%"]})
+            "Position": "MID", "KDA": "4.15", "KP": "67.8%", 
+            "Most_Champs": pd.DataFrame({"챔피언": ["아지르", "흐웨이", "탈리야"], "판_수": [5, 3, 3], "승률": ["80%", "100%", "33%"]}, index=idx)
         },
         "Peyz (김수환)": {
-            "Position": "BOT", "KDA": "5.62", "KP": "71.9%", 
-            "Most_Champs": pd.DataFrame({"챔피언": ["제리", "카이사", "신드라"], "판수": [6, 4, 2], "승률": ["83%", "75%", "100%"]})
+            "Position": "BOT", "KDA": "5.48", "KP": "73.1%", 
+            "Most_Champs": pd.DataFrame({"챔피언": ["제리", "카이사", "신드라"], "판수": [6, 4, 1], "승률": ["83%", "75%", "100%"]}, index=idx)
         },
         "Keria (류민석)": {
-            "Position": "SUPPORT", "KDA": "4.05", "KP": "75.3%", 
-            "Most_Champs": pd.DataFrame({"챔피언": ["노틸러스", "라칸", "레오나"], "판수": [5, 4, 3], "승률": ["80%", "75%", "66%"]})
+            "Position": "SUPPORT", "KDA": "3.92", "KP": "74.6%", 
+            "Most_Champs": pd.DataFrame({"챔피언": ["노틸러스", "레오나", "바드"], "판수": [5, 4, 2], "승률": ["80%", "75%", "50%"]}, index=idx)
         }
     }
     return player_stats
@@ -58,7 +60,6 @@ stage_filter = st.sidebar.selectbox(
     options=["통합 보기", "플레이-인 스테이지", "브래킷 스테이지"]
 )
 
-# 경기 필터링 로직
 if stage_filter == "플레이-인 스테이지":
     filtered_df = df_matches[df_matches["Stage"] == "플레이-인"]
 elif stage_filter == "브래킷 스테이지":
@@ -82,16 +83,12 @@ with col2:
 st.dataframe(filtered_df, use_container_width=True)
 st.markdown("---")
 
-# 6. 메인 하단 - T1 선수단 개별 스탯 분석 섹션 (새로 추가됨!)
+# 6. 메인 하단 - T1 선수단 개인 지표 분석 섹션
 st.subheader("🎯 T1 선수단 개인 지표 분석")
 
-# 선수 선택 라디오 버튼 또는 셀렉트박스
 selected_player = st.selectbox("분석할 선수를 선택하세요:", list(players_dict.keys()))
-
-# 선택된 선수의 데이터 가져오기
 p_data = players_dict[selected_player]
 
-# 선수 요약 지표 카드 배치
 p_col1, p_col2, p_col3 = st.columns(3)
 with p_col1:
     st.metric(label="포지션", value=p_data["Position"])
@@ -100,6 +97,5 @@ with p_col2:
 with p_col3:
     st.metric(label="킬 관여율 (KP)", value=p_data["KP"])
 
-# 선수의 모스트 챔피언 데이터프레임 출력
 st.markdown(f"**🔥 {selected_player}의 2026 MSI 모스트 챔피언 TOP 3**")
 st.dataframe(p_data["Most_Champs"], use_container_width=True)
